@@ -1,8 +1,11 @@
 def chunk_text(text: str, chunk_size: int = 1200, overlap: int = 200):
     """
-    Simple word-based chunking.
+    Chunk text into word-based overlapping chunks.
     chunk_size and overlap are in WORDS.
     """
+    if not text or not text.strip():
+        return []
+
     words = text.split()
     chunks = []
 
@@ -20,23 +23,24 @@ def chunk_text(text: str, chunk_size: int = 1200, overlap: int = 200):
         if start < 0:
             start = 0
 
+        # prevent infinite loop if overlap >= chunk_size
+        if overlap >= chunk_size:
+            break
+
     return chunks
 
 
-def chunk_pages(pages, chunk_size: int = 1200, overlap: int = 200):
+def chunk_pages(pages_text, chunk_size: int = 1200, overlap: int = 200):
     """
-    Input: [{"page": 1, "text": "..."}]
-    Output: [{"page": 1, "chunk_id": 0, "text": "..."}]
+    pages_text: list[str] (output from pdfplumber extractor)
+    Returns list of chunks with page numbers.
     """
     all_chunks = []
 
-    for page_data in pages:
-        page_no = page_data["page"]
-        text = page_data["text"]
+    for page_no, text in enumerate(pages_text, start=1):
+        page_chunks = chunk_text(text, chunk_size=chunk_size, overlap=overlap)
 
-        chunks = chunk_text(text, chunk_size=chunk_size, overlap=overlap)
-
-        for idx, chunk in enumerate(chunks):
+        for idx, chunk in enumerate(page_chunks):
             all_chunks.append(
                 {
                     "page": page_no,
